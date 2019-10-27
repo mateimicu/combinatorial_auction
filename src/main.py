@@ -1,25 +1,12 @@
 #!/usr/bin/env python3
-
+import argparse
 import os
-import datetime
 import logging
-import time
 import json
 
-LOGGING = logging.getLogger(__name__)
-logging.basicConfig(level="INFO")
+import base_solution
+import lp_model
 
-import pulp
-
-
-BIDS = {
-    ('b', 'c'): 5,
-    ('a', 'b', 'c'): 12,
-    ('a', 'c'): 8,
-    ('a', ): 8,
-    ('x', 'c'): 8,
-    ('x', ): 8,
-}
 
 def parse_file(file_path):
     """Parse a file in the appropriate format for the model."""
@@ -38,143 +25,94 @@ def parse_file(file_path):
             for line in fd:
                 money, *items = line.split()
                 bids[tuple(items)] = float(money)
-
     return bids
 
-class Model():
-    def __init__(self, bids, name, logger):
-        self._rez = None
-        self._delta_time = 0
-        self._bids = {}
-        for index, data in enumerate(bids.items()):
-            self._bids[index] = data
-        self._name = name
-        self._logger = logger
-        self._vars = self._prepare_vars()
-        self._model = self._prepare_model()
 
-    def _prepare_vars(self):
-        variables = pulp.LpVariable.dicts(
-            'bid', list(self._bids.keys()),
-            lowBound = 0,
-            upBound = 1,
-            cat = pulp.LpInteger)
-        return variables
+SOLUTIONS = [
+    lp_model.LPModel,
+]
 
-    def all_items(self):
-        all_items = []
-        for items, _ in self._bids.values():
-            all_items += items
-        return set(all_items)
+def get_parser():
+    parser = argparse.ArgumentParser(
+            description='Tool for analyzing combinatorial auction solutions.')
+    parser.add_argument('--summary-file', default='summary.json', type=str,
+                        help='File that will contain results of the runs in json format')
+    parser.add_argument('-s', '--solution',  type=str, required=True,
+                        choices=[sol.__name__ for sol in SOLUTIONS])
 
-    def _prepare_model(self):
+    parser.add_argument('--datasets',  type=str, default='../data/datasets',
+                        help='Location of the datasets.')
 
-        model = pulp.LpProblem(
-            "Auction Model "+self._name,
-            pulp.LpMaximize)
+    parser.add_argument('--logging-lvl',  type=str, default='INFO',
+                        choices=['INFO', 'DEBUG'],
+                        help='Logging level.')
 
-        # maximize the profit
-        model += pulp.lpSum(
-            [self._bids[index][1] * self._vars[index] for index in self._vars])
+    parser.add_argument('-t', '--timeout',  type=int, default=None,
+                        help='Nanoseconds to wait for a solution')
 
-        # Add restriction that you can only take
-        # one bid if they share at least one item
-        for item in self.all_items():
-            restrictie = sum(
-                [self._vars[index] for (index, data) in self._bids.items()
-                                if item in data[0]]) <= 1, "max_one_pick_%s"%str(item)
-            model  += restrictie
-        return model
+    return parser
 
-    def save_model(self, model_name=None):
-        if model_name is None:
-            model_name = "model_{}".format(datetime.datetime.now())
-        self._logger.debug(self._model)
+def get_datasets(directory):
+    # compute all data sources
+    datasets = []
+    for root, dirs, files in os.walk(os.path.abspath(directory), topdown=False):
+        for name in files:
+            file_path = os.path.join(os.path.abspath(root), name)
+            size = os.stat(file_path).st_size
+            datasets.append((name, file_path, size))
 
+    datasets.sort(key=lambda x: x[2])
+    return datasets
 
-        self._logger.info("Saving the model as %s", model_name)
-        self._model.writeLP(os.path.join("models", model_name+".lp"))
-        self._model.writeMPS(os.path.join("models", model_name+".mps"))
+def save_summary(summary, summary_path):
+    full_summary_path = os.path.abspath(summary_path)
+    if not os.path.isfile(full_summary_path):
+        with open(full_summary_path, "w+") as fd:
+            fd.write('{}')
 
-    def get_profit(self):
-        total_profit = 0
-        for index, data in self._bids.items():
-            _, pay = data
-            if self._vars[index].value() == 1.0:
-                total_profit += pay
-        return total_profit
+    with open(full_summary_path, "r+") as fp:
+        data = json.load(fp)
+    if "models" not in data:
+        data["models"] = []
+
+    data["models"].append(summary)
+    with open(full_summary_path, "w") as fp:
+        json.dump(data, fp)
 
 
-    def summary(self):
-        self._logger.debug("Winning bids:")
-        for index, data in self._bids.items():
-            items, pay = data
-            if self._vars[index].value() == 1.0:
-                self._logger.debug("[{:5}]{:18} => {}".format(
-                    str(index), str(items), pay))
-        self._logger.info("Total profit      => %s", self.get_profit())
-        self._logger.info("Status            => %s", pulp.LpStatus[self._rez])
-        minutes = int(self._delta_time/ 60)
-        seconds = int(self._delta_time% 60)
-        self._logger.info(
-            "Took              => %s minutes and %s  seconds", minutes, seconds)
+def main():
+    parser = get_parser()
+    args = parser.parse_args()
 
-    def solve(self):
-        start_time = time.time()
-        # CPLEX will tell us that the problem in infeasible for large datasets
-        # self._rez = self._model.solve(pulp.CPLEX())
-        self._rez = self._model.solve(pulp.GLPK())
-        delta_time = time.time() - start_time
-        self._delta_time = delta_time
-        return self._rez, self._delta_time
+    solution = None 
+    for sol in SOLUTIONS:
+        if sol.__name__ == args.solution:
+            solution = sol
+            break
+    if solution is None:
+        raise Exception("Can't find solver {}".format(args.solution))
 
-    def save_summary(self, file_path):
-        model_data = {
-            "status": self._rez,
-            "delta_time": self._delta_time,
-            "nr_items": len(self.all_items()),
-            "nr_orders": len(self._bids),
-            "profit": self.get_profit(),
-            "file_path": file_path,
-            "name": self._name
-        }
+    datasets = get_datasets(args.datasets)
 
-        with open("summary_data.json", "r+") as fp:
-            data = json.load(fp)
-        if "models" not in data:
-            data["models"] = []
+    logger = logging.getLogger(__name__)
+    logging.basicConfig(
+        level=args.logging_lvl,
+        format='%(asctime)s %(message)s')
 
-        data["models"].append(model_data)
-        with open("summary_data.json", "w") as fp:
-            json.dump(data, fp)
+    for name, file_path, _ in datasets:
+        logger.info('%s%s  %s  %s', '\n'*8, '-'*60, name, '-'*60)
+        logger.info("Started work on %s ...", name)
+        bids = parse_file(file_path)
+        logger.info("Creating model %s ...", name)
+        auction_model = solution(bids, "model_"+name, logger)
+        # auction_model.save_model()
+        logger.info("Solving %s ...", name)
+        auction_model.solve(timeout=args.timeout)
+        auction_model.summary()
+        summary = auction_model.get_summary(file_path)
+        summary['timeout'] = args.timeout
+        save_summary(summary, args.summary_file)
 
 
-# compute all data sources
-DATASOURCES = []
-for root, dirs, files in os.walk(os.path.abspath("./data"), topdown=False):
-    for name in files:
-        file_path = os.path.join(os.path.abspath(root), name)
-        size = os.stat(file_path).st_size
-        DATASOURCES.append((name, file_path, size))
-
-DATASOURCES.sort(key=lambda x: x[2])
-
-for name, file_path, _ in DATASOURCES:
-    LOGGING.info("Started work on %s ...", name)
-    bids = parse_file(file_path)
-    LOGGING.info("Creating model %s ...", name)
-    auction_model = Model(bids, "model_"+name, LOGGING)
-    auction_model.save_model()
-    LOGGING.info("Solving %s ...", name)
-    import pdb; pdb.set_trace()
-    auction_model.solve()
-    auction_model.summary()
-    auction_model.save_summary(file_path)
-
-
-
-# BIDS =  parse_file("/home/mmicu/Desktop/auction_problem/data/CAST_test_instance/arbitrary_40.txt")
-
-# auction_model = Model(BIDS, "test_model", LOGGING)
-# auction_model.solve()
-# auction_model.summary()
+if __name__ == '__main__':
+    main()
