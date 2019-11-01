@@ -4,7 +4,7 @@ Experimenting with algorithm that maximise the profit for Combinatorial Auction 
 ### Reports
 
 * [LP model and initial experiments](docs/01_report.pdf)
-* [Research on other solutions](docs/02_report.md)
+* [Research on other solutions](docs/02_report.pdf)
 
 
 An auxiliary report will be done based on the results of the following experiments:
