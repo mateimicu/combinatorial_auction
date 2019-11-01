@@ -31,8 +31,8 @@ def main():
             '# Tabular data of the experiment \n',
             '\n',
             '\n',
-            '| Model Name | Nr. Orders | Nr. Items  |   Profit   | Duration (seconds) |\n',
-            '|------------|------------|------------|------------|--------------------|\n',
+            '|           Model Name           | Nr. Orders | Nr. Items  |   Profit   | Duration (seconds) |\n',
+            '|--------------------------------|------------|------------|------------|--------------------|\n',
         ])
         for item in data['models']:
             # import pdb; pdb.set_trace()
@@ -42,7 +42,7 @@ def main():
             #     time = time / 60.0
 
             fd.write(
-                '| {:10.10} | {:10.10} | {:10.10} | {:10.10} | {:18.2f} |\n'.format(
+                '| {:30.30} | {:10.10} | {:10.10} | {:10.10} | {:18.2f} |\n'.format(
                     item['name'],
                     str(item['nr_orders']),
                     str(item['nr_items']),
