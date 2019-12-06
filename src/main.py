@@ -6,6 +6,7 @@ import json
 
 import base_solution
 import lp_model
+import greedy_model
 
 
 def parse_file(file_path):
@@ -30,6 +31,9 @@ def parse_file(file_path):
 
 SOLUTIONS = [
     lp_model.LPModel,
+    greedy_model.GreedyNumberOfItems,
+    greedy_model.GreedyBigBet,
+    greedy_model.GreedyAverageItemsPrice,
 ]
 
 def get_parser():
