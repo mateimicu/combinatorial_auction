@@ -3,7 +3,7 @@
 import time
 
 
-class BaseSolution():
+class BaseSolution(object):
     def __init__(self, bids, name, logger):
         self._rez = None
         self._delta_time = 0
@@ -32,8 +32,8 @@ class BaseSolution():
         self._extra_summary()
         self._logger.info("Total profit      => %s", self.get_profit())
         self._logger.info("Status            => %s", self._get_status())
-        minutes = int(self._delta_time/ 60)
-        seconds = int(self._delta_time% 60)
+        minutes = int(self._delta_time / 60)
+        seconds = int(self._delta_time % 60)
         self._logger.info(
             "Took              => %s minutes and %s  seconds", minutes, seconds)
 
