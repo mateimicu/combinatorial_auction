@@ -7,6 +7,8 @@ verify_ssl = true
 
 [packages]
 pulp = "*"
+matplotlib = "*"
+numpy = "*"
 
 [requires]
 python_version = "3.7"
