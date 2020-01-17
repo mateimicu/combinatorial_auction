@@ -1,5 +1,5 @@
 # Combinatorial Auction
-Experimenting with algorithm that maximise the profit for Combinatorial Auction probme
+Experimenting with algorithm that maximise the profit for Combinatorial Auction problem
 
 ### Reports
 
