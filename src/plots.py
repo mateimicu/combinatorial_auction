@@ -78,6 +78,7 @@ def main():
     gready_items = get_data('../data/results/GreedyNumberOfItems_full_run.json')
     gready_bid = get_data('../data/results/GreedyBigBet_full_run.json')
     aoc_first_implementaion_5sec = get_data('../data/results/aoc_firs_implementation_5sec.josn')
+    aoc_second_implementaion_5sec = get_data('../data/results/aoc_second_5_seconds.json')
 
     datasets = {
         'lp_1m': lp_1_min,
@@ -86,7 +87,7 @@ def main():
         'g_items': gready_items,
         'g_bid': gready_bid,
         'aco': aoc_first_implementaion_5sec,
-        'aco_s': aoc_first_implementaion_5sec,
+        'aco_s': aoc_second_implementaion_5sec
     }
 
     data_array = np.arange(len(datasets))

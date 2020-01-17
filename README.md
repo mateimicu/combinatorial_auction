@@ -28,6 +28,7 @@ Raw data for our experiments can be found [here](data/results), informations abo
 * [GreedyNumberOfItems_full_run](data/results/GreedyNumberOfItems_full_run.json)
 * [aoc_firs_implementation_5sec](data/results/aoc_firs_implementation_5sec.josn)
 * [10_sec_groupe1_dataset_on_all_solutions_1_retry](data/results/10_sec_groupe1_dataset_on_all_solutions_1_retry) result of running all models one time over the groupe1 dataset with a 10 second timeout
+* [aoc_second_5_seconds](data/results/aoc_second_5_seconds.json) result of running the improved ACO on all datasets
 * [5_min_custom_datasets_all_retry_1](data/results/5_min_custom_datasets_all_retry_1) result of running on the custom dataset all solutions with a 5 minute timeout
 * [parial_results](data/results/partial_results) this a partial runs that were termianted
 
