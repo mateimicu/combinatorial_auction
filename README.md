@@ -43,7 +43,7 @@ We have a few solutions:
    * GreedyNumberOfItems - is ordering bids by the amount if items the bid contains
    *  GreedyAverageItemsPrice - is ordering bids by the average price/item
  * Ant Colony Optimization that can be found [here](src/aoc_model.py) - this is the first solution, we can still improve it
- * Ant Colony Optimization that can be found [here](src/aoc_model.py) that uses 1000 ants to encourage exploration
+ * Ant Colony Optimization that can be found [here](src/aoc_model_second_generation.py) that uses 1000 ants to encourage exploration
 
 
 A utility tool to generate Markdown with tables based on a summary, can be found [here](src/create_markdown_table_from_result.py).
