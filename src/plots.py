@@ -219,7 +219,7 @@ def main():
     for model_name, models in split_models.items():
         labels.append(model_name)
         percentile_99.append(
-            np.percentile([model['delta_time'] for model in models], 90))
+            np.percentile([model['delta_time'] for model in models], 99))
         percentile_95.append(
             np.percentile([model['delta_time'] for model in models], 95))
         percentile_90.append(
