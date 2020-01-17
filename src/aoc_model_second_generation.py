@@ -1,4 +1,4 @@
-#reversed!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 Greedy solution to the winning determination problem.
 """
@@ -11,13 +11,14 @@ import pandas as pd
 import base_solution
 
 
-class AOCBaseSolution(base_solution.BaseSolution):
+class AOCBaseSolutionSecondGeneration(base_solution.BaseSolution):
     """Ant Colony Optimization solution."""
 
     def __init__(self, bids, name, logger,
-                 ant_count=10, pheromone_decay=0.9,
+                 ant_count=1000, pheromone_decay=0.9,
                  pheromone_power=0.5, greedy_power=0.5):
-        super(AOCBaseSolution, self).__init__(bids, name, logger)
+        super(AOCBaseSolutionSecondGeneration, self).__init__(
+            bids, name, logger)
         self._accepted_bids = []
         self._ant_count = ant_count
         self._pheromone_decay = pheromone_decay
@@ -92,6 +93,7 @@ class AOCBaseSolution(base_solution.BaseSolution):
                 )
             total_power = sum(probability_array)
             probability_array = list(map(lambda x: x/total_power, probability_array))
+            # import pdb; pdb.set_trace();
             winner_index_bid = np.random.choice(list(range(len(self._enhanced_bids))), p=probability_array)
 
             # add winning bid to ant
@@ -103,13 +105,11 @@ class AOCBaseSolution(base_solution.BaseSolution):
         index_of_max_fitness = ant_fitness.index(max_ant_fitness)
         bid_chosen = self._ants[index_of_max_fitness][-1]
         self._pheromone_trail[self._enhanced_bids.index(bid_chosen)] += max_ant_fitness
+
+        # normalize trail
+        self._pheromone_trail = [i/sum(self._pheromone_trail) for i in self._pheromone_trail]
         # TODO(mmicu):
-        # - compare how the aoc improves over time
-        # - maybe normalize the trail added by the fittest ant to encourage exploration
-        # - expose parameters to CLI (pheromone_decay,  pheromone_power, greedy_power, ant_count)
-        #   * run experiments with differing parameters
         # - if you have time implement local search
-        # - maybe multiply the ants over time
 
         # evaporate pheromone trail
         for index in range(len(self._pheromone_trail)):

@@ -9,6 +9,8 @@ verify_ssl = true
 pulp = "*"
 matplotlib = "*"
 numpy = "*"
+pandas = "*"
+scipy = "*"
 
 [requires]
 python_version = "3.7"
